@@ -1,1 +1,1 @@
-# Foundations_of_DataScience_-_MachineLearning-CS5014
+# Foundations_of_DataScience_and_MachineLearning-CS5014
