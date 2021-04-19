@@ -1,0 +1,416 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{verbatim}
+\usepackage{textcomp}
+\usepackage{graphicx}
+\usepackage{color,soul}
+\usepackage{xcolor}
+\newcommand{\mathcolorbox}[2]{\colorbox{#1}{$\displaystyle #2$}}
+
+
+
+%%% Meta data
+
+	\title{Foundations of Data Science \& Machine Learning}
+ 
+	\usepackage{authblk}
+	\author{
+		Summary | Week 08 \\
+		Devansh Singh Rathore\\
+		111701011
+	}
+	\affil{
+			B.Tech. in Computer Science \& Engineering\\
+		Indian Institute of Technology Palakkad
+	}
+
+
+%%% Page formatting
+
+	
+	\usepackage{hyperref}
+	\hypersetup{colorlinks=false,linkcolor=red,citecolor=red,pdfborder={0 0 0}}
+
+	\renewcommand{\arraystretch}{1.5}
+
+%% Algorithms
+	\usepackage{algorithm, algorithmic}
+	\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+	\renewcommand{\algorithmicensure}{\textbf{Output:}}
+% Math 
+	\usepackage{amsmath,amsthm, amssymb}
+
+	% Theorem environments
+	\newtheorem{theorem}{Theorem}
+	\newtheorem{corollary}[theorem]{Corollary}
+	\newtheorem{lemma}[theorem]{Lemma}
+	\newtheorem{proposition}[theorem]{Proposition}
+	\newtheorem{conjecture}[theorem]{Conjecture}
+	\newtheorem{observation}[theorem]{Conjecture}
+
+	\theoremstyle{definition}
+	\newtheorem{definition}[theorem]{Definition}
+	\newtheorem{question}[theorem]{Question}
+
+	\theoremstyle{remark}
+	\newtheorem*{remark}{Remark}
+	
+	% Shorthands
+	\def\bbN{\mathbb{N}}
+	\def\bbZ{\mathbb{Z}}
+	\def\bbQ{\mathbb{Q}}
+	\def\bbR{\mathbb{R}}
+	\def\bbF{\mathbb{F}}
+
+	\def\tends{\rightarrow}
+	\def\into{\rightarrow}
+	\def\implies{\Rightarrow}
+	\def\half{\frac{1}{2}}
+	\def\quarter{\frac{1}{4}}
+	
+	\newcommand{\set}[1]{\left\{ #1 \right\}}
+	\newcommand{\norm}[1]{\left\Vert #1 \right\Vert}
+	\newcommand{\ip}[2]{\left\langle #1, #2 \right\rangle}
+	\newcommand{\card}[1]{\left\vert #1 \right\vert}
+	\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+	\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+This week's lectures discusses random walks on directed graphs and its properties. Further we discuss stationary distributions of random walks with its real life applications.
+
+\end{abstract}
+
+\section{Random Walks on Graphs}
+
+\textbf{Definition: } A $\textbf{Random Walks}$ consists of a 'walk' on graph where the destination is chosen according to the current state and outgoing path probabilities. The sum of probabilities of outgoing paths from a state is equal to 1.
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.50\textwidth]{8a.png}
+ 
+ Fig 1.0 A sample Graph
+ \end{figure}
+
+$\rightarrow$ A good example for random walk can be (web pages, hyperlinks).
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.20\textwidth]{8b.png}
+ 
+ Fig 1.1 Weight of edge representing the probability $P_{ij}$
+ \end{figure}
+
+$\rightarrow$ Edge weights = Transition probability
+\[
+P_{ij} = P[Next \, State = j / Current \, State = i]
+\]
+\[
+Hence \, \forall i \in V(G), \; \sum_{j \in V(G)} P_{ij} = 1
+\]
+
+$\rightarrow$ Transition Probability Matrix (TPM):
+\[
+P = 
+\begin{bmatrix}
+P_{11} & ... & P_{1n}\\
+P_{21} & ... & P_{2n}\\
+:\\
+P_{n1} & ... & P_{nn}
+\end{bmatrix}_{n \, \times \, n}
+\]
+\[
+\begin{bmatrix}
+P_{11} & ... & P_{1n}\\
+P_{21} & ... & P_{2n}\\
+:\\
+P_{n1} & ... & P_{nn}
+\end{bmatrix}
+\begin{bmatrix}
+1\\
+1\\
+:\\
+1
+\end{bmatrix}
+=
+\begin{bmatrix}
+1\\
+1\\
+:\\
+1
+\end{bmatrix}
+\]
+
+$\rightarrow$ P1 $\equiv$ Every row of P sums to 1.
+
+$\rightarrow$ P is not symmetric as it's not necessary that $P_{ij} = P_{ji}$
+
+$\rightarrow$ Hence 1I = $[1, 1, ..., 1]^T$ is a (right) eigen vector of P with eigen value 1.
+
+In fact, if P is real non-negative matrix then,
+
+P is a stochastic matrix $<=>$ P 1I = 1I
+
+\vspace{0.2cm}
+\textbf{Corollary: } If $P_1$ and $P_2$ are n $\times$ n stochastic matrices, then so is $P_1P_2$
+\[
+P_1P_2 1| = P_1(P_2 1|) = P_1 1| = 1|
+\]
+
+\vspace{0.2cm}
+\textbf{Corollary: } If P is a stochastic matrix, then $\forall k \in \bbN, P^k$ is a stochastic matrix. (proof using previous corollary)
+\[
+P^k[i, j] = P[\text{State after k steps = j / current step = i}]
+\]
+
+\vspace{0.2cm}
+\textbf{Proposition: } All eigen values of P have magnitude $\leq 1$. i.e. Px = $\lambda x \implies |\lambda| \leq 1$
+
+\textbf{Proof: } Let x = ($x_1, x_2, ...x_n$) be a eigen vector corresponding to $\lambda$ s.t. some $|x_j| \leq 1 \forall j$
+
+\[
+Px = \lambda x
+\]
+\[
+<(i^{th} \, row \, of \, P), x> = \lambda x_i
+\]
+\[
+\sum^{n}_{j=1} P_{ij} x_j = \lambda 1
+\]
+\[
+|\lambda| \leq \sum^{n}_{j=1} P_{ij} |x_j| \leq \sum^{n}_{j=1} P_{ij} 1 = 1
+\]
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.50\textwidth]{8c.png}
+ 
+ Fig 1.2 Eigen value
+ \end{figure}
+ 
+$\rightarrow$ What is multiplicity of $\lambda = 1$?
+ 
+If $\lambda = 1$, then $x_j = 1 \forall j$ s.t $P_{ij} \neq 0$
+
+If every vertex is reachable from i, then $x_j = 1 \forall j \implies x = $ 1I.
+
+\vspace{0.2cm}
+\textbf{Proposition: } If the embedding graph G is strongly connected then the eigen value 1 has the multiplicity 1.
+
+$\equiv$ 1I is the unique eigen vector (upto scaling) for $\lambda = 1$.
+
+$\rightarrow$ Converse? (Exercise)
+
+(Hint: Sink component)
+
+$\rightarrow$ When do we get $\lambda = -1$?
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.60\textwidth]{8e.png}
+ 
+ Fig 1.3 Graph in $\lambda = -1$ case
+ \end{figure}
+ 
+This could happen when G is bipartite graph
+
+Strongly connected $\implies$ -1 also has multiplicity 1.
+
+$\rightarrow$ Is P full rank?
+
+Not necessarily.
+
+A possible case when P is full rank:
+\[
+\begin{bmatrix}
+1/3 & 1/3... & 1/3\\
+1/3 & 1/3... & 1/3\\
+:\\
+1/3 & 1/3... & 1/3
+\end{bmatrix}
+\]
+
+Interestingly the n $\times$ (n+1) matrix P - I : 1I has rank n. (exercise)
+
+$\rightarrow$ In an undirected graph case, $P_{ij} = P_{ji}$ and the P is symmetric matrix.
+
+\vspace{0.3cm}
+$\rightarrow$ $P^T$? ... It capture "evolution of random walk"
+
+$P^T$ is more important than P. Let p = ($p_1, p_2, ...,p_n$) be the node probabilities at current step. Then, $p' = P^Tp$ gives the node probability at the next step.
+\[
+p_i' = \sum_{j=1}^n P_{ji} p_j = [P^T p]_i
+\]
+\[
+p(t+1) = P^T p(t)
+\]
+
+$\rightarrow$ $x = (x_1, x_2, ...,x_n)$ is called probability vector if $x_i \geq 0 \, \forall i$ and $\sum_{i=1}^n x_i = 1$
+
+$\rightarrow$ Properties of $P^T$:
+\begin{itemize}
+    \item Eigen values (and multiplicities) pf P and $P^T$ are the same. (Proof using determinents: det($P^T - \lambda I$) = det($(P - \lambda I)^T$) = det($(P - \lambda I)$)).
+    \item x is a prob. vector $\implies P^T$ x is a prob. vector
+    
+    \textbf{Proof:} Let $y = P^T x$, $y_i \geq 0$ obviously
+    
+    \[
+    \sum_{i=1}^n y_i = 1|^T y = 1|^T P^T x = (P \, 1|)^T x = (1|)^T x = 1|
+    \]
+    
+    \item $P^T$ also has a unique eigen vector (upto scaling) for $\lambda = 1$. (considering strongly connected graph for 'unique'). But is it a prob. vector? YES!
+\end{itemize}
+
+\vspace{0.3cm}
+\section{Stationary Distributions of Random Walks}
+
+\textbf{Definition: } $\pi \in \bbR^n$ is called a \textbf{Stationary Distribution} of a random walk with transition matrix P if:
+
+\hspace{0.5cm}
+(i) $\pi$ is a prob. vector \&
+
+\hspace{0.5cm}
+(ii) $P^T \pi = \pi$
+
+\vspace{0.2cm}
+\textbf{Theorm 1: (Fundamental theorm of finite Markov Chain)} 
+
+$\rightarrow$ A random walk on every finite graph has a stationary distribution.
+
+\textbf{Observation:} Finiteness is necessary.
+
+\textbf{Standard Proof:} Key idea: \textbf{"Fixed Point Theorems"}
+
+Let $f : X \rightarrow X$, then a point $x\in X$ s.t. f(x) = x is called a \textbf{fixed point} of f.
+
+\textit{Example:} Any continuous function from a closed interval [a,b] to itself has a fixed point. 
+
+Let f : [a,b] $\rightarrow$ [a,b], continuous
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.30\textwidth]{8g.png}
+ 
+ Fig 2.0 function f
+ \end{figure}
+
+Since f is continuous function, f will intersect with function y = x at at least one point. Hence there will be at least one fixed point independent of what f is.
+
+\textbf{Fact 1:} If X is closed a compact convex set and f is continuous, then f has a fixed point. (Brouwer's FP theorm)
+
+\textbf{Fact 2:} Closed and bounded sets in $\bbR^n$ are compact.
+
+$\rightarrow$ What's our X?
+
+X = set of all prob. vectors in $\bbR^n$. ($n = |V(G)|$)
+
+\hspace{0.33cm}
+$= \{ (p_1, ..,p_n) : p_i \geq 0, \sum p_i = 1 \}$
+
+$\rightarrow$ Verify that X is:
+
+\hspace{0.5cm}
+(i) convex ($p, q \in X, \, then \, \lambda p + (1 - \lambda) q \in X$)
+
+\hspace{0.5cm}
+(ii) bounded ($||x||_{\infty} : max x_i, \, then \{ ||x||_{\infty} : x \in X \} \leq B = 1$)
+
+\hspace{0.5cm}
+(iii) closed
+
+$\rightarrow$ Then f : X $\rightarrow$ X
+
+x $\mapsto P^T x$
+
+$\rightarrow$ Verify f is continuous.
+
+So f has a fixed point in X. That is your stationary distribution.
+
+\vspace{0.3cm}
+\textbf{Direct Proof:}
+
+Let x be any prob. vector
+
+Consider the sequence of prob. vector - $x, xP, xP^2, xP^3,...$. (Evolution of the random walk x(0), x(1), ... where $x(t) = xP^t$)
+
+Let \textbf{"long-term average"} be a(t) = (1/t)(x(0) + x(1) + ... x(t-1))
+
+\hspace{6.35cm}
+$= (1/t)(x + xP + ... + xP^{t-1})$
+
+\vspace{0.2cm}
+\textbf{Claim 1:} $\forall t$, a(t) is a prob. vector
+
+therefore, a(1), a(2), ... $\in X$
+
+X is bounded $\implies$ a(1), a(2), ... contains a convergent subsequence $a(t_1), a(t_2), ...$.(proof: pigeonhole principle)
+
+X is closed $\implies lim_{n \rightarrow \infty} a(t_n) = a \in X$. (i.e. a is a prob. vector)
+
+\vspace{0.2cm}
+\[
+\forall t, \, a(t)P - a(t) = (1/t)(xP + xP^2 + ... + xP^t) - (1/t)(x + xP + ... + xP^{t-1})
+\]
+\[
+= (1/t)(xP^t - x)
+\]
+\[
+||a(t) P - a(t)||_{\infty} \leq (1/t) \; \; \; \; -(*)
+\]
+\[
+||a(t_n) P - a(t_n)||_{\infty} \leq (1/t_n) \rightarrow 0 \, as \, n \rightarrow \infty
+\]
+\[
+\implies ||aP - a||_{\infty} = 0
+\]
+\[
+aP = a
+\]
+
+Hence a is a stationary distribution.
+
+\vspace{0.2cm}
+\textbf{Question. If p(0) is an arbitrary starting distribution. Does $p(n) = p(0) P^n \rightarrow \pi \; as \; n \rightarrow \infty$ ?}
+
+\textbf{Ans.} Not always but Yes in most cases.
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.50\textwidth]{8h.png} (Fig 2.1)
+ \end{figure}
+
+Yes iff gcd of lengths of all directed cycles in G is 1.
+
+\vspace{0.2cm}
+\subsection{Summary}
+
+\hspace{0.45cm}
+1. Every random walk on a finite graph has a stationary distribution $\pi$. ($\pi P = \pi$)
+
+2. If the graph is strongly connected then the stationary distribution is unique and $a(t) \rightarrow \pi \; as \; t \rightarrow \infty$
+
+3. If the graph G is strongly connected and gcd(cycle length) = 1, for any prob. vector p(0), $p(t) \rightarrow \pi \; as \; t \rightarrow \infty$
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.70\textwidth]{8i.png}
+ 
+ Fig 2.2 applications of point(3.)
+ \end{figure}
+
+\begin{comment}
+%% Highlighter
+\mathcolorbox{yellow}{}
+
+%% Figure
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.70\textwidth]{figure.png}
+ 
+ Fig a.b figure
+ \end{figure}
+\end{comment}
+
+\end{document}
