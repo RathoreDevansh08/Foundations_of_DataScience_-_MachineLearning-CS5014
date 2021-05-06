@@ -1,0 +1,578 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{verbatim}
+\usepackage{textcomp}
+\usepackage{graphicx}
+\usepackage{color,soul}
+\usepackage{xcolor}
+\newcommand{\mathcolorbox}[2]{\colorbox{#1}{$\displaystyle #2$}}
+
+
+
+%%% Meta data
+
+	\title{Foundations of Data Science \& Machine Learning}
+ 
+	\usepackage{authblk}
+	\author{
+		Summary | Week 09 \\
+		Devansh Singh Rathore\\
+		111701011
+	}
+	\affil{
+			B.Tech. in Computer Science \& Engineering\\
+		Indian Institute of Technology Palakkad
+	}
+
+
+%%% Page formatting
+
+	
+	\usepackage{hyperref}
+	\hypersetup{colorlinks=false,linkcolor=red,citecolor=red,pdfborder={0 0 0}}
+
+	\renewcommand{\arraystretch}{1.5}
+
+%% Algorithms
+	\usepackage{algorithm, algorithmic}
+	\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+	\renewcommand{\algorithmicensure}{\textbf{Output:}}
+% Math 
+	\usepackage{amsmath,amsthm, amssymb}
+
+	% Theorem environments
+	\newtheorem{theorem}{Theorem}
+	\newtheorem{corollary}[theorem]{Corollary}
+	\newtheorem{lemma}[theorem]{Lemma}
+	\newtheorem{proposition}[theorem]{Proposition}
+	\newtheorem{conjecture}[theorem]{Conjecture}
+	\newtheorem{observation}[theorem]{Conjecture}
+
+	\theoremstyle{definition}
+	\newtheorem{definition}[theorem]{Definition}
+	\newtheorem{question}[theorem]{Question}
+
+	\theoremstyle{remark}
+	\newtheorem*{remark}{Remark}
+	
+	% Shorthands
+	\def\bbN{\mathbb{N}}
+	\def\bbZ{\mathbb{Z}}
+	\def\bbQ{\mathbb{Q}}
+	\def\bbR{\mathbb{R}}
+	\def\bbF{\mathbb{F}}
+
+	\def\tends{\rightarrow}
+	\def\into{\rightarrow}
+	\def\implies{\Rightarrow}
+	\def\half{\frac{1}{2}}
+	\def\quarter{\frac{1}{4}}
+	
+	\newcommand{\set}[1]{\left\{ #1 \right\}}
+	\newcommand{\norm}[1]{\left\Vert #1 \right\Vert}
+	\newcommand{\ip}[2]{\left\langle #1, #2 \right\rangle}
+	\newcommand{\card}[1]{\left\vert #1 \right\vert}
+	\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+	\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+This week we discuss about Markov Chain Monte Carlo Methods and Metropolis Hasting rule. Next we discuss Normalized Conductance.
+
+\end{abstract}
+
+\section{Markov Chain Monte Carlo Methods}
+
+\hspace{0.45cm}
+\textbf{Goal:} Sample a point x according to a distribution D. D is on domain X.
+\[
+x \sim D
+\]
+
+eg. $\sigma$ is a permutation of [n] chosen uniformly at random.
+
+$x \in \bbR^n$ is sampled from an n-dimensional gaussian.
+
+\vspace{0.2cm}
+\textbf{Key Idea:} ($\pi$ : distribution over X)
+
+Let the domain X be finite ($|X| = n$)
+
+So, $\pi$ will be a n-length prob. vector. i.e. $\pi = (\pi_1, \pi_2, ..., \pi_n)$ s.t. $\forall i, \; \pi_i \geq 0$ and $\sum_{i=1}^n \pi_i = 1$
+
+Design a directed graph G and transition probabilities P s.t. $\pi$ is a stationary distribution of P.
+
+\vspace{0.2cm}
+$\rightarrow$ Desirable properties:
+
+\hspace{0.5cm}
+(1) G is strongly connected (unique stationary distribution)
+
+\hspace{0.5cm}
+(2) gcd(cycle length) = 1 ($p(t) \rightarrow \pi$)
+
+\hspace{0.5cm}
+(3) low degrees 
+
+\hspace{0.5cm}
+(4) symmetries (regular for example)
+
+\hspace{0.5cm}
+(5) rapid mixing (convergence to stationary distribution)
+
+\vspace{0.2cm}
+\textbf{Easy Case:} $\pi$ is uniform on X.
+
+G : undirected connected non-bipartite graph with V(G) = X
+  
+\hspace{0.34cm}  : k - regular (k > 2)
+  
+\hspace{0.34cm}  : $P_{ij} = 1/k \forall i, j$
+  
+\hspace{0.34cm}  : Expander.
+
+$\rightarrow$ $\pi_i = 1/n$
+
+$\rightarrow$ 1 is eigen vector of P \& $P^T$ (since $P = P^T$). So $\pi = (1/n, 1/n, ..., 1/n)$ is the stationary distribution of P.
+
+\vspace{0.2cm}
+\textbf{Non-uniform $\pi$}
+
+If $\pi$ is a prob. vector \& P is  a stochastic matrix s.t., 
+\[
+\forall i,j \; \pi_i P_{ij} = \pi_j P_{ji} \; \; \; -(*)
+\]
+
+then $\pi$ is a stationary distribution of P(proof given below).
+
+\textbf{Proof:} Let $\sigma = P^T \pi$
+
+then $\pi_j = \sum_{j=1}^{n} P_{ji} \pi_j$
+
+$= \sum_{j=1}^{n} P_{ij} \pi_i$ \; \; \text{(using (*))}
+
+$=  \pi_i \sum_{j=1}^{n} P_{ij}$
+
+$= \pi_i$
+
+So $\sigma_i = \pi_i \; \forall i$
+
+Hence $\pi$ is the stationary distribution of P.
+
+\subsection{Metropolis-Hasting}
+
+\hspace{0.45cm}
+\textbf{Input:} $\pi$, a prob. distribution in [n]. (n length prob. vector)
+
+\textbf{Design of G:}
+
+Pick a "good" connected undirected graph H and replace each edge with 2 opposite arcs and add a self loop at each node to get G.
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.20\textwidth]{9a.png}
+ 
+ Fig 1.0 Generating graph G
+ \end{figure}
+
+\textbf{Observation:} G is strongly connected, gcd(cycle-length) = 1
+
+\textbf{Design of P:} (Aim: $\forall i,j \; \pi_i P_{ij} = \pi_j P_{ji}$)
+
+This is already satisfied for missing edges of H and self loops.
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.30\textwidth]{9b.png}
+ 
+ Fig 1.1 Designing P
+ \end{figure}
+ 
+\textbf{Attempt 1:}
+\[
+P_{ij} = \pi_j \; \forall j \in N^{+}(i)
+\]
+
+then,
+\[
+\pi_i P_{ij} = \pi_i \pi_j
+\]
+\[
+\pi_j P_{ji} = \pi_j \pi_i
+\]
+
+also,
+\[
+\sum_{j=1}^{n} P_{ij} = \sum_{j \in N^{+}(i)} \pi_j << 1 \; \text{,if H is sparse}
+\]
+
+We can fix this by changing $P_{ii}$
+
+\[
+P_{ij} = 
+\begin{Bmatrix}
+\pi_j & , \; j \in N^{+}(i) \backslash \{i\} \\
+1 - \sum_{k \in N^{+}(i) \backslash \{i\}} \pi_k & , \; j = i
+\end{Bmatrix}
+\]
+
+Issue: Too slow a walk because with max prob. it will travel self loop.
+
+\textbf{Scaling $P_{ij}$:}
+
+Subject to -
+
+\hspace{0.5cm} 1. Equal scaling for $P_{ij}$ and $P_{ji}$.
+
+\hspace{0.5cm} 2. $\sum_{j=1}^{n} P_{ij} \leq 1$. (Deficit $\rightarrow P_{ii}$)
+
+let r  = maximum out degree of G not counting self loop
+
+(2.) is ensured if $\forall i,j \; P_{ij} \leq 1/r \; (i \neq j)$
+
+Scaling for $P_{ij} = (1/r) / max \{ P_{ij}, P_{ji} \}$
+
+Hence $\forall j \in N^{+}(i) \backslash \{i\},\;  P_{ij} = ((1/r)/(max \{ \pi_i, \pi_j \})) \times \pi_j$
+
+\hspace{4.85cm}
+$= (1/r) \times min \{ 1/\pi_i, 1/\pi_j \} \times \pi_j$
+
+\hspace{4.85cm}
+$= (1/r) min \{ 1, \pi_j / \pi_i \}$
+
+Thus,
+\[
+\mathcolorbox{yellow}{
+\forall i \; P_{ij} = 
+\begin{Bmatrix}
+(1/r)min\{ 1, \pi_j / \pi_i \} & , j \in N^{+}(i) \backslash \{i\} \\
+1 - \sum_{j \in N^{+}(i) \backslash \{i\} P_{ij} } & , j=i
+\end{Bmatrix}
+}
+\]
+
+\textbf{Sanity Check of Metropolis-Hasting:}
+
+$\rightarrow \pi_i P_{ij} = (\pi_i / r) min \{ 1, \pi_j / \pi_i \}$
+
+\hspace{1.4cm}
+$= (1 / r) min \{ \pi_i, \pi_j \}$
+
+\hspace{1.4cm}
+$= (\pi_j / r) min \{ \pi_i / \pi_j, 1 \}$
+
+\hspace{1.4cm}
+$= \pi_j P_{ji}$
+
+$\rightarrow \forall i, \; \sum_{j \in N^+(i)} P_{ij} = 1 \; \; (by \; definition)$
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.45\textwidth]{9c.png}
+ 
+ Fig 1.2 Example of using Metropolis-Hasting
+ \end{figure}
+
+\vspace{0.2cm}
+\textbf{Walker's Rule:}
+
+When at node i - 
+
+\hspace{0.5cm}
+1. Select each out edge (i, j) w.p. 1/r. ($i \neq j$)
+
+\hspace{0.5cm}
+2. If ($\pi_j \geq \pi_i$)
+
+\hspace{1.5cm}
+move to node j w.p. 1
+
+\hspace{1.0cm}
+Else
+
+\hspace{1.5cm}
+move to node j w.p. $\pi_j / \pi_i$
+
+\vspace{0.2cm}
+$\rightarrow$ Usually, you can choose graph to be d dimensional lattice i.e. $[m]^d$:
+
+\hspace{1.0cm}
+1. $n = m^d \geq |X|$
+
+\hspace{1.0cm}
+2. Almost 2d - regular (except boundary vector). r = 2d.
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.5\textwidth]{9d.png}
+ 
+ Fig 1.3 Graph Choices
+ \end{figure}
+
+\vspace{0.2cm}
+\section{Normalized Conductance}
+
+\hspace{0.45cm}
+\textbf{Definition:} A Markov Chain with TPM P and a stationary distribution $\pi$ is called \textbf{Time Reversible} if
+\[
+\forall i, j \; \pi_i P_{ij} = \pi_j P_{ji}
+\]
+
+$\implies \text{Underlying digraph G is symmetric}$
+
+$\implies$ G can be obtained from an undirected graph H by doubling each edge. (H may have self loops)
+
+$\implies$ P can be encoded as weights on the edges of H.
+\[
+w_{ij} = \pi_i P_{ij} \; \; (= \pi_j P_{ji})
+\]
+
+\textbf{Claim:} If we know all $w_{ij}$ values then we can compute all $P_{ij}$ values.
+
+\textbf{Question:} Can we find P from $w_{ij}$'s?
+\[
+\sum_j w_{ij} = \sum_j \pi_i P_{ij} = \pi_i \sum_j P_{ij} = \pi_i
+\]
+\[
+So, \; \pi_i = \sum_j w_{ij}
+\]
+\[
+P_{ij} = w_{ij} / \pi_i
+\]
+
+$\rightarrow$ Sometimes $w_{ij}$'s may be scaled by an unknown constant ($w_{ij} = c \pi_i P_{ij}$)
+
+In that case,
+\[
+c = \sum_i \sum_j w_{ij}
+\]
+\[
+w_i = \sum_j w_{ij} \; \; \; (\pi_i = w_i / c)
+\]
+\[
+p_{ij} = w_{ij} / w_i
+\]
+
+Hence the weighted undirected graph H (with possibly self loops) defines the random walk.
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.50\textwidth]{9e.png}
+ 
+ Fig 2.0 Examples
+ \end{figure}
+
+\vspace{0.2cm}
+\textbf{Definition:} The \textbf{Normalised Conductance} $\phi(G)$ of a \textit{weighted undirected graph} G is defined as
+\[
+\phi(G) =  min_{S \subseteq V(G),\; 0 < W(S) \leq W(S')} \{ \sum_{x \in S, \; y \in S'} w_{xy} / W(S)\}
+\]
+\[
+where \; W(S) = \sum_{x \in S} w_x
+\]
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.20\textwidth]{9f.png}
+ 
+ Fig 2.1 S, S', W(S)
+ \end{figure}
+
+\textbf{Intution:} (Assume $\sum_{x,y} w_{xy} = 1$ (i.e. c = 1), so that $\sum_y w_{xy} = \pi_x$ and $w_{xy} = \pi_x P_{xy}$ )
+
+\[
+P_{xy} = Pr[ \text{next state} = y / \text{current state} = x ]
+\]
+\[
+= Pr[ \text{next move is along the arc is xy} / \text{current state} = x ]
+\]
+
+and,
+\[
+w_{xy} = \pi_x P_{xy} = Pr[ \text{next move is along the arc xy} ] \; \; \text{in steady state}
+\]
+\[
+\sum_{x \in S, y \in S'} w_{xy} = Pr[\text{next move is an escape from S}] \; \; \text{in SS}
+\]
+\[
+(1 / W(S)) \sum_{x \in S, y \in S'} w_{xy} = Pr[\text{Next state is outside S} / \text{Current state is in S}] \; \; \text{in SS}
+\]
+\[
+= \text{Escape prob. from S}
+\]
+
+$\phi =$ minimum escape prob. among all sets $S \subseteq V(G)$ with $o < W(S) \leq 1/2$
+
+\vspace{0.3cm}
+\textbf{Definition: Norm. Cond. of a Cut - } 
+
+for $S \subseteq V(G)$ with W(S) > 0, 
+\[
+\phi (S, S') := (\sum_{x \in S, y \in S'} w_{xy} / min \{ W(S), W(S') \}) \leq 1
+\]
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.20\textwidth]{9g.png}
+ 
+ Fig 2.2 Normalized Conductance of a cut
+ \end{figure}
+
+$\phi(G) =$ min $\phi(S, S')$ where the minimum is over all non-trivial cuts of G.
+
+\vspace{0.2cm}
+\textbf{Examples:}
+
+\vspace{0.2cm}
+1. $K_n$ with self loops
+
+$w_{ij} = 1 \; \forall$ edges
+
+$W_i = n \; \forall$ vertices
+
+$W(S) = n |S|$
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.30\textwidth]{9h.png}
+ 
+ Fig 2.3 Example 1 graph
+ \end{figure}
+ 
+Let (S, S') be arb. with $k = |S| \leq |S'|$
+
+$\phi (S, S') = k \times (n - k) / min \{ nk, n(n-k) \}$
+
+\hspace{1.4cm}
+$= k \times (n - k) / nk = (n - k) / n$
+
+$\phi (G) = min_{k \leq n/2} ((n - k) / n) \approx 1/2$
+
+\vspace{0.2cm}
+2. $P_n$ with end loop S
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.40\textwidth]{9j.png}
+ 
+ Fig 2.4 Example 2 graph
+ \end{figure}
+
+$w_{ij} = 1 \; \forall \, edges$
+
+Let $S \subseteq [n]$
+
+$W(S) = 2 |S|$
+
+Hence $|S| \leq |S'| \implies W(S) \leq W(S')$  ($|S| \leq n/2$)
+
+$\phi(S, S') = \sum_{x \in S, y \in S'} w_{xy} / W(S)$
+
+\hspace{1.35cm}
+$= |E(S, S')| / 2 |S|$
+
+$W(G) = min_{|S| \leq n/2} \phi(S, S') \approx 1 / (2.n/2) = 1/n$
+
+\vspace{0.2cm}
+3. G disconnected $\implies \phi(G) = 0$ 
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.20\textwidth]{9k.png}
+ 
+ Fig 2.5 Example 3 graph
+ \end{figure}
+
+Pick S to be V($C_i$) with $W(V(C_i))$ smallest.
+
+\vspace{0.2cm}
+4. Dumbbell 
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.20\textwidth]{9l.png}
+ 
+ Fig 2.6 Example 4 graph
+ \end{figure}
+
+($w_{ij} = 1 \; \forall edges$)
+
+$W(S) = (n/2) \times (n/2) \times 1 \approx n^2 / 4$
+
+$E(S, S') = 1$
+
+$\phi(S, S') = 4 / n^2$
+
+$\phi(G) \leq 4 / n^2 \; \;$ (worse than path) 
+
+No monotonicity.
+
+\vspace{0.2cm}
+5. 2D - lattice with end loops
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.30\textwidth]{9m.png}
+ 
+ Fig 2.7 Example 5 graph
+ \end{figure}
+
+$W(S) = 4|S|$ hence $|S| < |S'| \implies W(S) \leq W(S')$. ($|S| = k$)
+
+\vspace{0.2cm}
+Observation 1:
+
+If $|S| \leq 4 / n^2$ then a corner square has least number of escape edges relative to $|S|$.
+
+$E(S, S') \approx 2 \sqrt{|S|}$
+
+Hence, $\phi(S, S') = E(S, S') / W(S)$
+
+$\approx (2 \sqrt{|S|}) / (4 |S|) \leq 1 / (2 \sqrt{n^2 / 4}) = 1/n$
+
+\vspace{0.2cm}
+Observation 2:
+
+If $n^2/4 < |S| \leq n^2/2$, then a margin strip has least no. of escape edges.
+
+$E(S, S') \approx n$
+
+Hence $\phi(S, S') \approx n / (4 |S|) \leq n / (4.n^2/2) = 1 / 2n$
+
+So, $\phi(G) = 1 / 2n = 1 / 2 \sqrt{|V(G)|}$
+
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.30\textwidth]{9n1.png}
+ \includegraphics[width=0.30\textwidth]{9n2.png}
+ 
+ Fig 2.8 Example 5 graphs: observations 1 vs 2 (respectively)
+ \end{figure}
+ 
+\vspace{0.3cm}
+6. d-dimensional lattice with end loops
+
+$|V(G)| = n^d$
+
+$\phi(G) = 1 / dn = 1 / (d |V(G)|^{1/d})$ (Exercise)
+
+\vspace{0.2cm}
+$\rightarrow$ \textbf{Inference:} Higher connectivity $\implies$ Higher conductance.
+
+\begin{comment}
+%% Highlighter
+\mathcolorbox{yellow}{}
+
+%% Figure
+\begin{figure}[!h]
+\centering
+ \includegraphics[width=0.70\textwidth]{figure.png}
+ 
+ Fig a.b figure
+ \end{figure}
+\end{comment}
+
+\end{document}
